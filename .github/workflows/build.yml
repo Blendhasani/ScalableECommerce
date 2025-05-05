@@ -1,4 +1,4 @@
-name: Build and Dockerize Microservices
+name: "Build and Dockerize Microservices"
 
 on:
   push:
@@ -22,10 +22,10 @@ jobs:
           - NotificationService
 
     steps:
-      - name: Checkout code
+      - name: "Checkout code"
         uses: actions/checkout@v3
 
-      - name: Debug: list workspace
+      - name: "Debug: list workspace"
         run: |
           echo "=== workspace root ==="
           ls -R .
@@ -36,26 +36,26 @@ jobs:
           echo "=== src/${{ matrix.project }} ==="
           ls src/${{ matrix.project }} || echo ">> folder not found!"
 
-      - name: Setup .NET
+      - name: "Setup .NET"
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
+      - name: "Restore dependencies"
         run: dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
 
-      - name: Build project
+      - name: "Build project"
         run: dotnet build --no-restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
 
-      - name: Test placeholder
+      - name: "Test placeholder"
         run: echo "No tests yet for ${{ matrix.project }}"
 
-      - name: Set fully lowercase image name
+      - name: "Set fully lowercase image name"
         run: |
           IMAGE_TAG="ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/$(echo '${{ matrix.project }}' | tr '[:upper:]' '[:lower:]')"
           echo "IMAGE_NAME=$IMAGE_TAG" >> $GITHUB_ENV
 
-      - name: Build Docker image
+      - name: "Build Docker image"
         run: |
           docker build \
             --file "${{ github.workspace }}/src/${{ matrix.project }}/Dockerfile" \

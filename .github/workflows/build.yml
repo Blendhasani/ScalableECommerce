@@ -44,6 +44,14 @@ jobs:
             | tr '[:upper:]' '[:lower:]')"
           echo "IMAGE_NAME=$IMAGE_TAG" >> $GITHUB_ENV
 
+      - name: Debug: show service folder
+        run: |
+          echo "→ Listing src/${{ matrix.project }}:"
+          ls -al src/${{ matrix.project }}
+          echo
+          echo "→ Head of Dockerfile:"
+          head -n 5 src/${{ matrix.project }}/Dockerfile || echo "  (file not found)"
+
       - name: Build Docker image
         run: |
           docker build \

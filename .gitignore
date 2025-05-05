@@ -1,0 +1,15 @@
+# Ignore Visual Studio folders
+.vs/
+bin/
+obj/
+
+# Ignore user-specific files
+*.user
+*.suo
+
+# Ignore Docker artifacts
+**/Dockerfile
+**/docker-compose.*
+
+# Optional: ignore logs
+*.log

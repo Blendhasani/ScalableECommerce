@@ -1,4 +1,4 @@
-name: Build and Dockerize Microservices
+name: Test Build and Dockerize Microservices
 
 on:
   push:

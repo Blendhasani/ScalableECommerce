@@ -2,9 +2,11 @@ name: Build and Dockerize Microservices
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
@@ -12,7 +14,12 @@ jobs:
 
     strategy:
       matrix:
-        project: [ProductService, UserService, OrderService, InventoryService, NotificationService]
+        project:
+          - ProductService
+          - UserService
+          - OrderService
+          - InventoryService
+          - NotificationService
 
     steps:
       - name: Checkout code
@@ -37,5 +44,13 @@ jobs:
           IMAGE_TAG="ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/$(echo '${{ matrix.project }}' | tr '[:upper:]' '[:lower:]')"
           echo "IMAGE_NAME=$IMAGE_TAG" >> $GITHUB_ENV
 
+      # (Optional) debug: make sure the Dockerfile is where you expect
+      - name: Show project folder contents
+        run: ls -R src/${{ matrix.project }}
+
       - name: Build Docker image
-        run: docker build -t $IMAGE_NAME -f ./src/${{ matrix.project }}/Dockerfile ./src/${{ matrix.project }}
+        run: |
+          docker build \
+            --file ./src/${{ matrix.project }}/Dockerfile \
+            --tag $IMAGE_NAME \
+            ./src/${{ matrix.project }}

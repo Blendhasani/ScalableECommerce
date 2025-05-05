@@ -2,9 +2,11 @@ name: Build and Dockerize Microservices
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
@@ -29,19 +31,20 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore ./src/${{ matrix.project }}/${{ matrix.project }}.csproj
+        run: |
+          dotnet restore ./src/${{ matrix.project }}/${{ matrix.project }}.csproj
 
-      - name: Build
-        run: dotnet build --no-restore ./src/${{ matrix.project }}/${{ matrix.project }}.csproj
+      - name: Build project
+        run: |
+          dotnet build --no-restore ./src/${{ matrix.project }}/${{ matrix.project }}.csproj
 
-      - name: Test
-        run: echo "No tests yet for ${{ matrix.project }}"
+      - name: Test placeholder
+        run: |
+          echo "No tests yet for ${{ matrix.project }}"
 
       - name: Set fully lowercase image name
         run: |
-          IMAGE_TAG="ghcr.io/$(echo '${{ github.repository_owner }}' \
-            | tr '[:upper:]' '[:lower:]')/$(echo '${{ matrix.project }}' \
-            | tr '[:upper:]' '[:lower:]')"
+          IMAGE_TAG="ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/$(echo '${{ matrix.project }}' | tr '[:upper:]' '[:lower:]')"
           echo "IMAGE_NAME=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Debug: show service folder

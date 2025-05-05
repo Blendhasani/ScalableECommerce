@@ -1,10 +1,12 @@
-name: Build and Dockerize Microservices
+name: "Build and Dockerize Microservices"
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
@@ -20,35 +22,42 @@ jobs:
           - NotificationService
 
     steps:
-      - name: Checkout code
+      - name: "Checkout code"
         uses: actions/checkout@v3
 
-      - name: Setup .NET SDK
+      - name: "Debug: list workspace"
+        run: |
+          echo "=== workspace root ==="
+          ls -R .
+          echo
+          echo "=== src/ ==="
+          ls src
+          echo
+          echo "=== src/${{ matrix.project }} ==="
+          ls src/${{ matrix.project }} || echo ">> folder not found!"
+
+      - name: "Setup .NET"
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Build .NET project
+      - name: "Restore dependencies"
+        run: dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
+
+      - name: "Build project"
         run: dotnet build --no-restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
 
-      - name: Compute image name
+      - name: "Test placeholder"
+        run: echo "No tests yet for ${{ matrix.project }}"
+
+      - name: "Set fully lowercase image name"
         run: |
           IMAGE_TAG="ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/$(echo '${{ matrix.project }}' | tr '[:upper:]' '[:lower:]')"
           echo "IMAGE_NAME=$IMAGE_TAG" >> $GITHUB_ENV
 
-      - name: Debug: show service folder
-        run: |
-          echo "Working directory: $GITHUB_WORKSPACE"
-          pwd
-          echo "--- src/${{ matrix.project }} contents ---"
-          ls -al src/${{ matrix.project }}
-          echo
-          test -f "src/${{ matrix.project }}/Dockerfile" && echo "✔ Dockerfile found" || (echo "❌ Dockerfile missing!" && exit 1)
-
-      - name: Build Docker image (verbose)
+      - name: "Build Docker image"
         run: |
           docker build \
-            --progress=plain \
-            --file src/${{ matrix.project }}/Dockerfile \
+            --file "${{ github.workspace }}/src/${{ matrix.project }}/Dockerfile" \
             --tag "$IMAGE_NAME" \
-            src/${{ matrix.project }}
+            "${{ github.workspace }}/src/${{ matrix.project }}"

@@ -33,4 +33,4 @@ jobs:
       run: echo "No tests yet for ${{ matrix.project }}"
 
     - name: Build Docker image
-      run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ matrix.project }}:latest ./src/${{ matrix.project }}
+     run: docker build -t ghcr.io/${{ github.repository_owner }}/$(echo ${{ matrix.project }} | tr '[:upper:]' '[:lower:]'):latest ./src/${{ matrix.project }}

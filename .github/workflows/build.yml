@@ -2,9 +2,11 @@ name: Build and Dockerize Microservices
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
@@ -27,9 +29,11 @@ jobs:
         run: |
           echo "=== workspace root ==="
           ls -R .
-          echo; echo "=== src/ ==="
+          echo
+          echo "=== src/ ==="
           ls src
-          echo; echo "=== src/${{ matrix.project }} ==="
+          echo
+          echo "=== src/${{ matrix.project }} ==="
           ls src/${{ matrix.project }} || echo ">> folder not found!"
 
       - name: Setup .NET
@@ -40,7 +44,7 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
 
-      - name: Build
+      - name: Build project
         run: dotnet build --no-restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
 
       - name: Test placeholder

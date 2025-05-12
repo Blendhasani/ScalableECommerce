@@ -1,6 +1,6 @@
-# High-Level Architecture
+﻿# High-Level Architecture
 
-Week 2 : Provide a high-level architecture for the application (service components, communication patterns, databases, etc.)
+**Week 2**: Provide a high-level architecture for the application (service components, communication patterns, databases, etc.)
 
 ## Tech Stack
 
@@ -54,3 +54,20 @@ _Example:_ instead of `/users/api/users`, `/products/api/products`, or `/orders/
 
 - Builds Docker images after successful tests  
 - Deploys containers automatically upon success  
+
+---
+
+# Week 3: Database Design and API Implementation
+
+- Created individual **SQL Server databases** for each microservice:
+  - `dev-product`, `dev-order`, `dev-user`, `dev-inventory`, `dev-notification`
+- Designed and created **initial schemas** for each service (e.g., `Products`, `Categories`, `Orders`, etc.)
+- Used **EF Core scaffolding** to reverse-engineer models into each service’s `Infrastructure/Models` folder
+- Configured and registered **DbContexts** in each `.API` project using `Program.cs` and `appsettings.json`
+- Added **project references**:
+  - `.API → .Application → .Infrastructure`
+- Built full **CRUD operations** for `ProductService`:
+  - `AddProductCommand` and `EditProductCommand` for input
+  - `ProductDto` and `GetProductByIdDto` for output
+  - `ProductServiceImpl` in Application layer for business logic
+  - `ProductsController` in API for HTTP endpoints

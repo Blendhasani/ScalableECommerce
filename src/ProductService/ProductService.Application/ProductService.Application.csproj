@@ -7,11 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Category\Commands\" />
-    <Folder Include="Category\DTO\" />
-    <Folder Include="Category\Abstractions\" />
-    <Folder Include="Category\Query\" />
-    <Folder Include="Category\Services\" />
+    <Folder Include="Product\Query\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProductService.Infrastructure\ProductService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

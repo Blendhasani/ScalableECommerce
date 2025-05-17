@@ -1,3 +1,4 @@
+# .github/workflows/build.yml
 name: Build & Push Docker Images
 
 on:
@@ -42,7 +43,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up QEMU (for multi-platform builds)
+      - name: Set up QEMU (for multi-platform)
         uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
@@ -63,7 +64,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ${{ matrix.api-dir }}
-          file:    ${{ matrix.api-dir }}/Dockerfile
+          file:    Dockerfile
           push:    true
           tags: |
             ghcr.io/${{ env.OWNER_LOWER }}/${{ matrix.tag-suffix }}:latest

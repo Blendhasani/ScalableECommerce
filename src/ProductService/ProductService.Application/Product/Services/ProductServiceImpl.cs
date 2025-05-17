@@ -66,7 +66,7 @@ namespace ProductService.Application.Product.Services
 			{
 				Id = product.Id,
 				Name = product.Name,
-				Description = product.Description,
+				Description = product.Description??"N/A" ,
 				Price = product.Price,
 				Stock = product.Stock,
 				Category = 
@@ -74,7 +74,7 @@ namespace ProductService.Application.Product.Services
 				new ProductCategoryDto
 				{
 					CategoryId = product.CategoryId ?? 0,
-					Name = product.Category.Name 
+					Name = product.Category!= null? product.Category.Name : "N/A"
 				} : null
 			
 			};

@@ -1,15 +1,20 @@
+# .github/workflows/build.yml
 name: Build and Dockerize Microservices
 
+# fire on pushes or PRs to main
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
+
+# allow pushing to GHCR
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
 
     strategy:
@@ -22,35 +27,40 @@ jobs:
           - NotificationService
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # 1) checkout
+      - uses: actions/checkout@v3
 
-      - name: Setup .NET
+      # 2) install .NET 8
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore & build .NET project
+      # 3) restore & build each service
+      - name: Restore & build
         run: |
           dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
-          dotnet build --no-restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
+          dotnet build src/${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Release
 
-      - name: Set fully lowercase image name
-        run: |
-          IMAGE_TAG="ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/$(echo '${{ matrix.project }}' | tr '[:upper:]' '[:lower:]')"
-          echo "IMAGE_NAME=$IMAGE_TAG" >> $GITHUB_ENV
+      # 4) login to GHCR
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Debug: show service folder
+      # 5) set lowercase image name in ENV (Docker requires lowercase names)
+      - name: Set IMAGE_NAME env var
         run: |
-          echo "→ Listing src/${{ matrix.project }}:"
-          ls -al src/${{ matrix.project }}
-          echo
-          echo "→ Head of Dockerfile:"
-          head -n 5 src/${{ matrix.project }}/Dockerfile || echo "  (file not found)"
+          NAME=$(echo "${{ matrix.project }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY_OWNER}/${NAME}:latest" >> $GITHUB_ENV
 
-      - name: Build Docker image
-        run: |
-          docker build \
-            --file Dockerfile \
-            --tag $IMAGE_NAME \
-            src/${{ matrix.project }}
+      # 6) build & push via build-push-action
+      - name: Build & push image
+        uses: docker/build-push-action@v4
+        with:
+          context: src/${{ matrix.project }}
+          file: src/${{ matrix.project }}/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}

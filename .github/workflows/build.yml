@@ -1,14 +1,12 @@
 # .github/workflows/build.yml
 name: Build and Dockerize Microservices
 
-# fire on pushes or PRs to main
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
-# allow pushing to GHCR
 permissions:
   contents: read
   packages: write
@@ -27,22 +25,20 @@ jobs:
           - NotificationService
 
     steps:
-      # 1) checkout
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # 2) install .NET 8
-      - name: Setup .NET SDK
+      - name: Setup .NET 8 SDK
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      # 3) restore & build each service
+      # restore & build the API project under each folder
       - name: Restore & build
         run: |
-          dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
-          dotnet build src/${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Release
+          dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.API/${{ matrix.project }}.API.csproj
+          dotnet build src/${{ matrix.project }}/${{ matrix.project }}.API/${{ matrix.project }}.API.csproj --configuration Release
 
-      # 4) login to GHCR
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -50,17 +46,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5) set lowercase image name in ENV (Docker requires lowercase names)
       - name: Set IMAGE_NAME env var
         run: |
           NAME=$(echo "${{ matrix.project }}" | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY_OWNER}/${NAME}:latest" >> $GITHUB_ENV
+          echo "IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/${NAME}:latest" >> $GITHUB_ENV
 
-      # 6) build & push via build-push-action
       - name: Build & push image
         uses: docker/build-push-action@v4
         with:
-          context: src/${{ matrix.project }}
-          file: src/${{ matrix.project }}/Dockerfile
+          context: src/${{ matrix.project }}/${{ matrix.project }}.API
+          file: src/${{ matrix.project }}/${{ matrix.project }}.API/Dockerfile
           push: true
           tags: ${{ env.IMAGE_NAME }}

@@ -38,18 +38,18 @@ jobs:
       - name: Restore & Build
         run: |
           dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.API/${{ matrix.project }}.API.csproj
-          dotnet build src/${{ matrix.project }}/${{ matrix.project }}.API/${{ matrix.project }}.API.csproj \
+          dotnet build   src/${{ matrix.project }}/${{ matrix.project }}.API/${{ matrix.project }}.API.csproj \
             --configuration Release \
             -p:TreatWarningsAsErrors=false
 
-      - name: Login to GitHub Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set IMAGE_NAME env var
+      - name: Set IMAGE_NAME
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           NAME=$(echo "${{ matrix.project }}"        | tr '[:upper:]' '[:lower:]')
@@ -59,6 +59,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: src/${{ matrix.project }}/${{ matrix.project }}.API
-          file:    src/${{ matrix.project }}/${{ matrix.project }}.API/Dockerfile
+          file:    Dockerfile                    # ← was pointing at the wrong path before
           push:    true
           tags:    ${{ env.IMAGE_NAME }}

@@ -16,7 +16,6 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
@@ -59,9 +58,9 @@ jobs:
       - name: Build & Push Docker image
         uses: docker/build-push-action@v4
         with:
-          # Make src/ your build context so that COPY ["InventoryService/…"] works
-          context: src
-          # -f must be the path *from your repo root* to the Dockerfile
-          file:    src/${{ matrix.project }}/${{ matrix.project }}.API/Dockerfile
+          # Point the context at each service's .API folder:
+          context: src/${{ matrix.project }}/${{ matrix.project }}.API
+          # And tell Buildx to use the Dockerfile right there:
+          file:    Dockerfile
           push:    true
           tags:    ${{ env.IMAGE_NAME }}

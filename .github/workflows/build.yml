@@ -43,14 +43,14 @@ jobs:
             --configuration Release \
             -p:TreatWarningsAsErrors=false
 
-      - name: Login to GitHub Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set IMAGE_NAME env var
+      - name: Set IMAGE_NAME
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           NAME=$(echo "${{ matrix.project }}"        | tr '[:upper:]' '[:lower:]')
@@ -59,8 +59,9 @@ jobs:
       - name: Build & Push Docker image
         uses: docker/build-push-action@v4
         with:
+          # Make src/ your build context so that COPY ["InventoryService/…"] works
           context: src
-          # **relative to src/**:
-          file:    ${{ matrix.project }}/${{ matrix.project }}.API/Dockerfile
+          # -f must be the path *from your repo root* to the Dockerfile
+          file:    src/${{ matrix.project }}/${{ matrix.project }}.API/Dockerfile
           push:    true
           tags:    ${{ env.IMAGE_NAME }}

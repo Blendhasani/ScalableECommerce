@@ -1,71 +1,48 @@
-# .github/workflows/build.yml
-name: Build and Dockerize Microservices
+name: Build & Publish Services
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
-permissions:
-  contents: read
-  packages: write
+    branches: [ main ]
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     strategy:
-      fail-fast: false
       matrix:
-        project:
-          - ProductService
-          - UserService
-          - OrderService
-          - InventoryService
-          - NotificationService
+        service: [ InventoryService, NotificationService, OrderService, ProductService, UserService ]
+        # map each service to its API folder and its Docker tag suffix
+        api-dir: [
+          src/InventoryService/InventoryService.API,
+          src/NotificationService/NotificationService.API,
+          src/OrderService/OrderService.API,
+          src/ProductService/ProductService.API,
+          src/UserService/UserService.API
+        ]
+        tag-suffix: [ inventoryservice, notificationservice, orderservice, productservice, userservice ]
 
     steps:
-      # 1) Checkout your code
-      - uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v3
 
-      # 2) Install .NET 8 SDK
-      - name: Setup .NET 8 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
+      - name: Set up QEMU (for cross-platform)
+        uses: docker/setup-qemu-action@v2
 
-      # 3) Restore & build each API project
-      - name: Restore & Build
-        run: |
-          dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.API/${{ matrix.project }}.API.csproj
-          dotnet build   src/${{ matrix.project }}/${{ matrix.project }}.API/${{ matrix.project }}.API.csproj \
-            --configuration Release \
-            -p:TreatWarningsAsErrors=false
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # 4) Login to GitHub Container Registry
-      - name: Login to GHCR
-        uses: docker/login-action@v2
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5) Compute a lowercase image tag
-      - name: Set IMAGE_NAME
-        run: |
-          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          NAME=$(echo "${{ matrix.project }}"        | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_NAME=ghcr.io/${OWNER}/${NAME}:latest" >> $GITHUB_ENV
-
-      # 6) Build & push via Buildx
-      - name: Build & Push Docker image
+      - name: Build and push ${{ matrix.service }}
         uses: docker/build-push-action@v4
         with:
-          context: src
-          # path **relative to** src/ where your Dockerfile lives
-          file:    ${{ matrix.project }}/${{ matrix.project }}.API/Dockerfile
-          push:    true
-          tags:    ${{ env.IMAGE_NAME }}
+          context: ${{ matrix.api-dir }}
+          file: ${{ matrix.api-dir }}/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.tag-suffix }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.tag-suffix }}:${{ github.sha }}

@@ -27,14 +27,17 @@ jobs:
           - NotificationService
 
     steps:
+      # 1) Checkout your code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 2) Install .NET 8 SDK
       - name: Setup .NET 8 SDK
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
+      # 3) Restore & build (ignore nullable warnings-as-errors)
       - name: Restore & Build
         run: |
           dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.API/${{ matrix.project }}.API.csproj
@@ -42,6 +45,7 @@ jobs:
             --configuration Release \
             -p:TreatWarningsAsErrors=false
 
+      # 4) Login to GitHub Container Registry
       - name: Login to GHCR
         uses: docker/login-action@v2
         with:
@@ -49,16 +53,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set IMAGE_NAME
+      # 5) Compute lowercase image name
+      - name: Set IMAGE_NAME env var
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           NAME=$(echo "${{ matrix.project }}"        | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_NAME=ghcr.io/${OWNER}/${NAME}:latest" >> $GITHUB_ENV
 
+      # 6) Build & push Docker image
       - name: Build & Push Docker image
         uses: docker/build-push-action@v4
         with:
           context: src/${{ matrix.project }}/${{ matrix.project }}.API
-          file:    Dockerfile                    # ← was pointing at the wrong path before
+          file:    src/${{ matrix.project }}/${{ matrix.project }}.API/Dockerfile
           push:    true
           tags:    ${{ env.IMAGE_NAME }}

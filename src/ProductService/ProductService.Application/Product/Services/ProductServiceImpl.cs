@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using ProductService.Application.Messaging;
 using ProductService.Application.Product.Abstractions;
 using ProductService.Application.Product.Commands;
 using ProductService.Application.Product.DTO;
@@ -14,10 +16,13 @@ namespace ProductService.Application.Product.Services
 	public class ProductServiceImpl : IProductService
 	{
 		private readonly ProductDbContext _context;
+		private readonly IMemoryCache _cache;
 
-		public ProductServiceImpl(ProductDbContext context)
+
+		public ProductServiceImpl(ProductDbContext context, IMemoryCache cache)
 		{
 			_context = context;
+			_cache = cache;
 		}
 
 		public async Task<int> AddProductAsync(AddProductCommand command)
@@ -55,29 +60,37 @@ namespace ProductService.Application.Product.Services
 
 		public async Task<ProductDto?> GetByIdAsync(int id)
 		{
+			var cacheKey = $"product:{id}";
+
+			if (_cache.TryGetValue(cacheKey, out ProductDto cachedProduct))
+			{
+				return cachedProduct;
+			}
+
+
 			var product = await _context.Products
-				.Include(x=>x.Category)
-				.Where(x=>x.Id == id)
+				.Include(x => x.Category)
+				.Where(x => x.Id == id)
 				.FirstOrDefaultAsync();
 
 			if (product == null) return null;
 
-			return new ProductDto
+			var result = new ProductDto
 			{
 				Id = product.Id,
 				Name = product.Name,
-				Description = product.Description??"N/A" ,
+				Description = product.Description ?? "N/A",
 				Price = product.Price,
 				Stock = product.Stock,
-				Category = 
-				product.CategoryId != null?
-				new ProductCategoryDto
+				Category = product.CategoryId != null ? new ProductCategoryDto
 				{
 					CategoryId = product.CategoryId ?? 0,
-					Name = product.Category!= null? product.Category.Name : "N/A"
+					Name = product.Category != null ? product.Category.Name : "N/A"
 				} : null
-			
 			};
+
+			_cache.Set(cacheKey, result, TimeSpan.FromMinutes(10));
+			return result;
 		}
 
 		public async Task<bool> UpdateAsync(int id, EditProductCommand command)
@@ -92,6 +105,8 @@ namespace ProductService.Application.Product.Services
 			product.CategoryId = command.CategoryId;
 
 			await _context.SaveChangesAsync();
+			_cache.Remove($"product:{id}");
+
 			return true;
 		}
 
@@ -103,8 +118,16 @@ namespace ProductService.Application.Product.Services
 
 			_context.Products.Remove(product);
 			await _context.SaveChangesAsync();
+
+			_cache.Remove($"product:{id}");
+
+			// Publish product deleted message to RabbitMQ
+			var publisher = new EventBusPublisher();
+			publisher.PublishProductDeleted(id);
+
 			return true;
 		}
+
 
 	}
 }

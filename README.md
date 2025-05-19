@@ -71,3 +71,5 @@ _Example:_ instead of `/users/api/users`, `/products/api/products`, or `/orders/
   - `ProductDto` and `GetProductByIdDto` for output
   - `ProductServiceImpl` in Application layer for business logic
   - `ProductsController` in API for HTTP endpoints
+
+![Alt text](high_level_architecture_diagram.jpeg "high level architecture diagram.jpeg")

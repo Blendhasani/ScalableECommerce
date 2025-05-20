@@ -73,7 +73,7 @@ _Example:_ instead of `/users/api/users`, `/products/api/products`, or `/orders/
   - `ProductsController` in API for HTTP endpoints
 
 
-## Week 4: Caching & Performance Optimization
+# Week 4: Caching & Performance Optimization
 
 **Goal**  
 Improve response times and reduce database load for frequently accessed endpoints.

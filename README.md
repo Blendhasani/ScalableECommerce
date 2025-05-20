@@ -72,4 +72,78 @@ _Example:_ instead of `/users/api/users`, `/products/api/products`, or `/orders/
   - `ProductServiceImpl` in Application layer for business logic
   - `ProductsController` in API for HTTP endpoints
 
+
+## Week 4: Caching & Performance Optimization
+
+**Goal**  
+Improve response times and reduce database load for frequently accessed endpoints.
+
+**Implementation Details**  
+1. **Memory caching** in `GetByIdAsync` using `IMemoryCache`  
+ - Key: `product:{id}`  
+ - Duration: 10 minutes  
+2. **Cache invalidation**  
+ - On delete: remove `product:{id}`  
+ - On update: remove `product:{id}`  
+3. **Query optimization**  
+ - Added index on `CategoryId` for faster filtering  
+
+**Performance Impact**  
+- `GetByIdAsync` responses now return in ~1–2 ms from cache  
+- No EF Core query if data is cached  
+- Significantly fewer database hits under load  
+
+**Tools Used**  
+- `IMemoryCache` (`Microsoft.Extensions.Caching.Memory`)  
+- .NET scoped DI  
+- SQL Server index on `CategoryId`  
+
+---
+
+# Event-Driven Architecture & Message Broker Choice
+
+**Why did I choose RabbitMQ**  
+- **Simplicity & flexibility**: supports fan-out, direct, topic exchanges  
+- **Reliable delivery**: retains messages until acknowledged  
+- **High throughput**: lightweight and fast for real-time events  
+- **.NET support**: mature `RabbitMQ.Client` library  
+
+**Design Overview**  
+- **Publisher (ProductService)**:  
+- Deletes product → publishes `Product deleted: {id}` to `product-deleted` queue  
+- **Consumer (InventoryService)**:  
+- Background worker listens on `product-deleted`  
+- Logs and handles cleanup  
+
+**Key Benefits**  
+- Loose coupling via events  
+- Resilience: RabbitMQ buffers messages if a consumer is down  
+- Scalability: add new consumers without touching the publisher  
+- Observability through the RabbitMQ UI and logs  
+
+---
+
+# Demonstrating Failure and Recovery
+
+**Scenario:** InventoryService is down when an event is published
+
+1. **InventoryService offline**  
+ - No listener on `product-deleted`  
+2. **Publish event**  
+ - ProductService publishes `Product deleted: {id}`  
+ - Message stays in queue (Ready = 1)  
+3. **InventoryService restart**  
+ - Reconnects to RabbitMQ  
+ - Consumes pending message  
+ - Logs:  
+   ```
+   [InventoryService] Received: Product deleted: {id} at 2025-05-18T23:12:50Z
+   ```
+
+**Outcomes**  
+- Independent availability: services fail and recover safely  
+- Durable messaging: no data loss  
+- Automatic recovery: pending messages processed on restart  
+- End-to-end resilience in distributed architecture  
+
 ![Alt text](high_level_architecture_diagram.jpeg "high level architecture diagram.jpeg")

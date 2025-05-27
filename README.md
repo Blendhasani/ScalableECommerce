@@ -1,4 +1,6 @@
-﻿# High-Level Architecture
+﻿![Alt text](high_level_architecture_diagram.jpeg "high level architecture diagram.jpeg")
+
+# High-Level Architecture
 
 **Week 2**: Provide a high-level architecture for the application (service components, communication patterns, databases, etc.)
 
@@ -146,4 +148,52 @@ Improve response times and reduce database load for frequently accessed endpoint
 - Automatic recovery: pending messages processed on restart  
 - End-to-end resilience in distributed architecture  
 
-![Alt text](high_level_architecture_diagram.jpeg "high level architecture diagram.jpeg")
+
+# Week 5: Scalability tests
+
+This week's document captures the high-level results of my **Load**, **Stress** and **Scalability** testing for the `ProductService.API` microservice.
+
+---
+
+## 1. Load Test
+
+- **Scenario:** 50 concurrent users, each sending 10 requests (500 total), ramp-up in 1 ms  
+- **Key Metrics:**  
+  - **Avg. Response Time:** ~100 ms  
+  - **Median (50th):** 105 ms  
+  - **90th %ile:** 162 ms  
+  - **95th %ile:** 178 ms  
+  - **99th %ile:** 244 ms  
+  - **Min / Max:** 14 ms / 284 ms  
+  - **Throughput:** 250.6 req/sec  
+  - **Error Rate:** 0.00%  
+
+**Interpretation:** the service handled sustained load with consistent latencies and no errors.
+
+---
+
+## 2. Stress Test
+
+| Users | Avg RT | Median | 90% Line | 95% Line | 99% Line | Min  | Max  | Throughput | Errors |
+|------:|-------:|-------:|---------:|---------:|---------:|-----:|-----:|-----------:|-------:|
+|   100 |   10 ms |    9 ms |    11 ms |    13 ms |    56 ms |  7 ms | 95 ms |     10.1/sec |   0%  |
+|   300 |    8 ms |    9 ms |    10 ms |    10 ms |    11 ms |  6 ms | 21 ms |     30.4/sec |   0%  |
+|  1000 |    8 ms |    7 ms |     8 ms |     9 ms |    58 ms |  5 ms | 91 ms |    100.1/sec |   0%  |
+
+**Interpretation:** no failures at up to 1000 users, with throughput scaling linearly and 99th-percentile still under 60 ms.
+
+---
+
+## 3. Scalability Test
+
+| Replicas | Users | Avg RT | Throughput  | Errors |
+|---------:|------:|-------:|------------:|-------:|
+| **3**    |   100 | 361 ms |   3.4 req/sec |   0%  |
+| **3**    |   300 | 134 ms |   6.2 req/sec |   0%  |
+| **3**    |  1000 | 133 ms |   7.2 req/sec |   0%  |
+| **5**    |  1000 |   4 ms |  11.7 req/sec |   0%  |
+
+**Interpretation:** each added replica increases capacity by ~2 req/sec; at 5 replicas latency collapses to single-digit ms.
+
+---
+

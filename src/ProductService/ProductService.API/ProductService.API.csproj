@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UserSecretsId>cd09bd26-f636-4fed-a49f-9b9ac21da2d4</UserSecretsId>
+		<!-- enables the output of testhost.deps.json -->
 		<!-- <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS> -->
 		<!-- 🔧 Comment or remove -->
 	</PropertyGroup>
@@ -23,5 +24,4 @@
 		<ProjectReference Include="..\ProductService.Application\ProductService.Application.csproj" />
 		<ProjectReference Include="..\ProductService.Infrastructure\ProductService.Infrastructure.csproj" />
 	</ItemGroup>
-
 </Project>

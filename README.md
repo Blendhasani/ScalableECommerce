@@ -196,4 +196,93 @@ This week's document captures the high-level results of my **Load**, **Stress** 
 **Interpretation:** each added replica increases capacity by ~2 req/sec; at 5 replicas latency collapses to single-digit ms.
 
 ---
+# Unit Testing Report – ProductService and ProductController
+
+## Overview
+
+This report documents the unit tests implemented for the `ProductService` and `ProductController` components of the application. Tests are written using **xUnit** as the test framework and **FluentAssertions** for expressive assertions. 
+
+Mocking was done using **Moq**, and **Entity Framework Core InMemoryDatabase** was used for simulating the data layer.
+
+---
+
+## ProductService Unit Tests
+
+### Setup
+
+- A new in-memory database is created per test using `Guid.NewGuid()` to avoid data collision.
+- `MemoryCache` is used to simulate caching behavior.
+- A custom `FakeEventBusPublisher` is injected to bypass real RabbitMQ publishing during unit tests.
+
+### Tests
+
+- **AddProductAsync_ReturnsProductId**  
+  Verifies that adding a product returns a valid ID.
+
+- **GetAllProductsAsync_ReturnsListWithCategoryNames**  
+  Ensures the product is returned with the correct category name.
+
+- **GetByIdAsync_Cached_ReturnsFromCache**  
+  Tests retrieval of a product directly from cache.
+
+- **GetByIdAsync_NotCached_ReturnsAndCaches**  
+  Verifies a product is fetched from the database if not cached, and then cached.
+
+- **UpdateAsync_Exists_ReturnsTrueAndUpdates**  
+  Confirms successful update of an existing product.
+
+- **UpdateAsync_NotFound_ReturnsFalse**  
+  Returns false when trying to update a non-existent product.
+
+- **DeleteAsync_Exists_ReturnsTrueAndDeletes**  
+  Confirms a product is successfully deleted.
+
+- **DeleteAsync_NotFound_ReturnsFalse**  
+  Returns false when attempting to delete a non-existent product.
+
+---
+
+## ProductController Unit Tests
+
+### Setup
+
+- `IProductService` is mocked using Moq.
+- `ProductController` is tested by injecting the mock service.
+
+### Tests
+
+- **GetAll_ReturnsOkWithExpectedData**  
+  Verifies the `GetAll` action returns a 200 OK with the expected data.
+
+- **AddProduct_ReturnsOkWithProductId**  
+  Ensures the added product returns an ID wrapped in a 200 OK result.
+
+- **GetById_ProductExists_ReturnsOk**  
+  Returns the expected product when found.
+
+- **GetById_ProductDoesNotExist_ReturnsNotFound**  
+  Returns 404 when the product is not found.
+
+- **Update_ProductExists_ReturnsNoContent**  
+  Verifies that updating an existing product returns 204 No Content.
+
+- **Update_ProductNotFound_ReturnsNotFound**  
+  Returns 404 Not Found when updating a non-existent product.
+
+- **Delete_ProductExists_ReturnsNoContent**  
+  Confirms deletion of an existing product returns 204 No Content.
+
+- **Delete_ProductNotFound_ReturnsNotFound**  
+  Returns 404 when attempting to delete a non-existent product.
+
+---
+
+## Conclusion
+
+- All tests passed successfully.
+- Both positive and negative scenarios are covered.
+- In-memory databases and mocks ensure isolation and determinism.
+- FluentAssertions enhances readability and maintainability of tests.
+
+
 

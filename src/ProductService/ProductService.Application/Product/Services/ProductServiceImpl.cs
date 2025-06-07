@@ -17,12 +17,14 @@ namespace ProductService.Application.Product.Services
 	{
 		private readonly ProductDbContext _context;
 		private readonly IMemoryCache _cache;
+		private readonly IEventBusPublisher _publisher;
 
 
-		public ProductServiceImpl(ProductDbContext context, IMemoryCache cache)
+		public ProductServiceImpl(ProductDbContext context, IMemoryCache cache, IEventBusPublisher publisher)
 		{
 			_context = context;
 			_cache = cache;
+			_publisher = publisher;
 		}
 
 		public async Task<int> AddProductAsync(AddProductCommand command)
@@ -122,8 +124,8 @@ namespace ProductService.Application.Product.Services
 			_cache.Remove($"product:{id}");
 
 			// Publish product deleted message to RabbitMQ
-			var publisher = new EventBusPublisher();
-			publisher.PublishProductDeleted(id);
+			_publisher.PublishProductDeleted(id);
+
 
 			return true;
 		}

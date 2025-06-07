@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace ProductService.Application.Messaging
 {
-	public class EventBusPublisher
+	public class EventBusPublisher : IEventBusPublisher
 	{
-		public void PublishProductDeleted(int productId)
+		public virtual void PublishProductDeleted(int productId)
 		{
 			var factory = new ConnectionFactory() { HostName = "localhost" };
 			using var connection = factory.CreateConnection();

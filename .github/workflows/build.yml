@@ -1,26 +1,20 @@
-name: Build .NET 8 services
+name: Simple Build
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Setup .NET SDK 8
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore src/ProductService/ProductService.API/ProductService.API.csproj
 
-      - name: Build solution
-        run: dotnet build --configuration Release --no-restore
+      - name: Build
+        run: dotnet build src/ProductService/ProductService.API/ProductService.API.csproj --no-restore --configuration Release
